@@ -1,0 +1,1 @@
+This is a simple context file for testing the AI content generator.
