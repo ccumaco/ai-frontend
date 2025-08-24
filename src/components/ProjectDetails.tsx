@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
 import { Project, ContextFile, Chat } from '../types';
 import { useParams, useNavigate } from 'react-router-dom';
+import MainLayout from '../Layout/main';
 
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -48,13 +49,33 @@ const ProjectDetails: React.FC = () => {
         setChats([...chats, response.data]);
         setNewChatName('');
       }
-    } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to create chat');
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        if (
+          typeof error === 'object' &&
+          error !== null &&
+          'response' in error
+        ) {
+          setError(
+            (error as { response?: { data?: { error?: string } } }).response
+              ?.data?.error || 'Failed to create chat'
+          );
+        } else {
+          setError('Failed to create chat');
+        }
+      } else {
+        setError('Failed to create chat');
+      }
     }
   };
 
   return (
-    <div className='p-6'>
+    <MainLayout>
       <h1 className='text-3xl font-bold mb-4'>
         {project?.name || 'Project Details'}
       </h1>
@@ -97,7 +118,7 @@ const ProjectDetails: React.FC = () => {
           </li>
         ))}
       </ul>
-    </div>
+    </MainLayout>
   );
 };
 

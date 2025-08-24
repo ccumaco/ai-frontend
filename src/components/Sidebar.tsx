@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { apiService } from '../services/apiService';
 import { Project, Chat, SidebarState } from '../types';
 import clsx from 'clsx';
+import { Button } from 'flowbite-react';
 
 const Sidebar: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -25,13 +26,6 @@ const Sidebar: React.FC = () => {
     };
     fetchProjects();
   }, []);
-
-  const toggleSidebar = () => {
-    setSidebarState((prevState) => ({
-      ...prevState,
-      isCollapsed: !prevState.isCollapsed,
-    }));
-  };
 
   const handleSectionChange = (section: 'projects' | 'chats') => {
     setSidebarState((prevState) => ({
@@ -86,18 +80,17 @@ const Sidebar: React.FC = () => {
         sidebarState.isCollapsed ? 'w-16' : 'w-64'
       )}
     >
-      <button
-        onClick={toggleSidebar}
-        className='mb-4 bg-blue-500 text-white w-full py-1 rounded'
-      >
-        {sidebarState.isCollapsed ? '>' : '<'}
-      </button>
-
       <div className='mb-4'>
+        <Button
+          //redirect to home page
+          onClick={() => (window.location.href = '/')}
+        >
+          Home
+        </Button>
         <button
           onClick={() => handleSectionChange('projects')}
           className={clsx(
-            'w-full py-2',
+            'w-full py-2 ',
             sidebarState.activeSection === 'projects' && 'bg-blue-200'
           )}
         >

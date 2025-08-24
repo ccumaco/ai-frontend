@@ -5,15 +5,18 @@
   "type": "module",
   "dependencies": {
     "axios": "^1.11.0",
+    "clsx": "^2.1.1",
+    "flowbite": "^3.1.2",
+    "flowbite-react": "^0.12.7",
+    "lucide-react": "^0.468.0",
+    "prismjs": "^1.29.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-dropzone": "^14.3.8",
-    "react-router-dom": "^7.1.1",
-    "lucide-react": "^0.468.0",
-    "clsx": "^2.1.1",
+    "react-icons": "^5.5.0",
     "react-markdown": "^9.0.1",
-    "remark-gfm": "^4.0.0",
-    "prismjs": "^1.29.0"
+    "react-router-dom": "^7.1.1",
+    "remark-gfm": "^4.0.0"
   },
   "scripts": {
     "dev": "vite",
