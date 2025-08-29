@@ -1,77 +1,68 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { apiService } from '../services/apiService';
 import { Project, ContextFile, Chat } from '../types';
 import { useParams, useNavigate } from 'react-router-dom';
 import MainLayout from '../Layout/main';
-
+import { useSelector } from 'react-redux';
+import { selectProjects } from '../features/projects/projectsSlice';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../store';
+import {
+  createChat,
+  fetchChatsByProject,
+  selectChats,
+} from '../features/chats/chatsSlice';
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
+
   const navigate = useNavigate();
-  const [project, setProject] = useState<Project | null>(null);
-  const [contextFiles, setContextFiles] = useState<ContextFile[]>([]);
-  const [chats, setChats] = useState<Chat[]>([]);
   const [newChatName, setNewChatName] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const projects = useSelector(selectProjects);
+  const [project, setProject] = useState<Project | null>(null);
+  const [contextFiles, setContextFiles] = useState<ContextFile[]>([]);
+
+  //get listChatsByProject
+  const dispatch = useDispatch<AppDispatch>();
+  const chats = useSelector(selectChats);
 
   useEffect(() => {
-    fetchProjectDetails();
+    if (projectId) {
+      dispatch(fetchChatsByProject(projectId));
+    }
+  }, [dispatch, projectId]);
+
+  //get context files
+  useEffect(() => {
+    const fetchContextFiles = async () => {
+      if (!projectId) return;
+      try {
+        const response = await apiService.listContextFilesByProject(projectId);
+        if (response.success) {
+          setContextFiles(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch context files', error);
+        setError('Failed to fetch context files');
+      }
+    };
+    fetchContextFiles();
   }, [projectId]);
 
-  const fetchProjectDetails = async () => {
-    try {
-      const response = await apiService.listChatsByProject(projectId!);
-      if (response.success) {
-        setChats(response.data);
-      }
-      const contextResponse = await apiService.listContextFilesByProject(
-        projectId!
-      );
-      if (contextResponse.success) {
-        setContextFiles(contextResponse.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch project details:', error);
+  //set project when projects or projectId changes
+  useEffect(() => {
+    if (projects.length > 0 && projectId) {
+      const foundProject = projects.find((p) => p._id === projectId);
+      setProject(foundProject || null);
+      console.log(foundProject, 'foundProject');
     }
-  };
+  }, [projects, projectId]);
 
-  const handleCreateChat = async () => {
-    if (!newChatName) {
-      setError('Chat name is required.');
-      return;
-    }
-
-    try {
-      const response = await apiService.createChat({
-        projectId: projectId!,
-        name: newChatName,
-      });
-      if (response.success) {
-        setChats([...chats, response.data]);
-        setNewChatName('');
-      }
-    } catch (error: unknown) {
-      if (
-        error instanceof Error &&
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error
-      ) {
-        if (
-          typeof error === 'object' &&
-          error !== null &&
-          'response' in error
-        ) {
-          setError(
-            (error as { response?: { data?: { error?: string } } }).response
-              ?.data?.error || 'Failed to create chat'
-          );
-        } else {
-          setError('Failed to create chat');
-        }
-      } else {
-        setError('Failed to create chat');
-      }
-    }
+  //pending get chats
+  const handleCreateChat = () => {
+    if (!newChatName.trim()) return;
+    dispatch(createChat({ projectId: '', name: newChatName }));
+    setNewChatName('');
   };
 
   return (
@@ -83,6 +74,9 @@ const ProjectDetails: React.FC = () => {
       {error && <div className='text-red-600 mb-4'>{error}</div>}
 
       <h2 className='text-xl font-semibold mb-2'>Context Files</h2>
+
+      {/* Drag and drop to upload context */}
+
       <ul className='list-disc ml-5 mb-4'>
         {contextFiles.map((file) => (
           <li key={file._id}>

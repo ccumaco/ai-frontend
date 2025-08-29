@@ -1,59 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { apiService } from '../services/apiService';
-import { Project } from '../types';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useIsMounted from '../hooks/isMounted';
 import MainLayout from '../Layout/main';
+import { useSelector } from 'react-redux';
+import {
+  createProject,
+  selectProjects,
+  selectProjectsError,
+  selectProjectsLoading,
+} from '../features/projects/projectsSlice';
+import { AppDispatch } from '../store';
+import { useDispatch } from 'react-redux';
 
 const Projects: React.FC = () => {
-  const [projects, setProjects] = useState<Project[]>([]);
   const [newProjectName, setNewProjectName] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const isMounted = useIsMounted();
-
-  //
-  useEffect(() => {
-    if (isMounted()) {
-      fetchProjects();
-    }
-  }, []);
-
-  const fetchProjects = async () => {
-    try {
-      const response = await apiService.listProjects();
-      if (response.success) {
-        setProjects(response.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch projects:', error);
-    }
-  };
-
-  const handleCreateProject = async () => {
-    if (!newProjectName) {
-      setError('Project name is required.');
-      return;
-    }
-
-    setError(null);
-
-    try {
-      const response = await apiService.createProject({ name: newProjectName });
-      if (response.success) {
-        setProjects([...projects, response.data]);
-        setNewProjectName('');
-      }
-    } catch (error: unknown) {
-      if (typeof error === 'object' && error !== null && 'response' in error) {
-        setError(
-          (error as { response?: { data?: { error?: string } } }).response?.data
-            ?.error || 'Failed to create project'
-        );
-      } else {
-        setError('Failed to create project');
-      }
-    }
+  const projects = useSelector(selectProjects);
+  const dispatch = useDispatch<AppDispatch>();
+  const loading = useSelector(selectProjectsLoading);
+  const error = useSelector(selectProjectsError);
+  const handleCreateProject = () => {
+    if (!newProjectName.trim()) return;
+    dispatch(createProject({ name: newProjectName }));
+    setNewProjectName('');
   };
 
   const handleProjectClick = (projectId: string) => {
@@ -66,7 +34,7 @@ const Projects: React.FC = () => {
         <h1 className='text-3xl font-bold mb-4'>Projects</h1>
 
         {error && <div className='text-red-600 mb-4'>{error}</div>}
-
+        {loading && <div className='mb-4'>Loading...</div>}
         <div className='mb-4'>
           <input
             type='text'
